@@ -1,0 +1,28 @@
+# EditorConfig — universal editor settings.
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Markdown allows trailing whitespace for hard breaks
+[*.md]
+trim_trailing_whitespace = false
+
+# Makefiles require tabs
+[Makefile]
+indent_style = tab
+
+# YAML is sensitive to indentation
+[*.{yml,yaml}]
+indent_size = 2
+
+# Go convention
+[*.go]
+indent_style = tab

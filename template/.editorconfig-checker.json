@@ -1,0 +1,39 @@
+{
+  "Verbose": false,
+  "Debug": false,
+  "IgnoreDefaults": false,
+  "SpacesAfterTabs": false,
+  "NoColor": false,
+  "Exclude": [
+    "node_modules",
+    "dist/",
+    "build/",
+    "coverage/",
+    "\\.next",
+    "\\.astro/",
+    "public/",
+    "uploads/",
+    "\\.playwright-output",
+    "\\.claude/",
+    "package-lock\\.json$",
+    "\\.lock$"
+  ],
+  "AllowedContentTypes": [
+    "text/",
+    "application/ecmascript",
+    "application/json",
+    "application/x-ndjson",
+    "application/xml",
+    "+json",
+    "+xml"
+  ],
+  "PassedFiles": [],
+  "Disable": {
+    "EndOfLine": false,
+    "Indentation": false,
+    "InsertFinalNewline": false,
+    "TrimTrailingWhitespace": false,
+    "IndentSize": false,
+    "MaxLineLength": false
+  }
+}

@@ -1,0 +1,23 @@
+
+# ========================================
+# Local-only directories that must NEVER be tracked
+#
+# List each one with a note on WHY, so a future reader does not "tidy up" a
+# rule they do not understand. The pre-commit hook in .githooks/ enforces the
+# same list, because `git add -f` walks straight past .gitignore.
+#
+#   - uploads/    runtime user uploads (real customer data)
+#   - ops/.env.*  operator credentials for infrastructure
+# ========================================
+uploads/
+.env
+.env.*
+ops/.env.*
+*.pem
+*.key
+*.pid
+*-nohup.log
+node_modules/
+dist/
+build/
+coverage/

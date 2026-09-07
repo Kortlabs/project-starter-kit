@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+# Pre-commit guardrail. Tracked in the repo rather than living in .git/hooks, so
+# a fresh clone gets it. Enable once per clone:
+#
+#   git config core.hooksPath .githooks
+#
+# Bypass in a genuine emergency with `git commit --no-verify`, and expect to
+# explain why.
+set -uo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+# ─────────────────────────────────────────────────────────────────────
+# Layer 1 — paths that must never enter history.
+#
+# .gitignore alone is not enough: `git add -f` walks straight past it, and a
+# bulk `git add -A` sweeps in anything not yet ignored. Add a pattern here for
+# every directory holding runtime uploads, client material, licensed documents,
+# large binaries or scratch work.
+# ─────────────────────────────────────────────────────────────────────
+FORBIDDEN_PATHS=(
+  '^uploads/'
+  '^\.env$'
+  '^\.env\..*'
+  '^ops/\.env\..*'
+  '^.*\.pem$'
+  '^.*\.key$'
+  '^.*\.pid$'
+  '^.*-nohup\.log$'
+  # '^client-data/'
+  # '^design-mockups/'
+)
+
+VIOLATIONS=()
+while IFS= read -r path; do
+  [ -z "$path" ] && continue
+  for pattern in "${FORBIDDEN_PATHS[@]}"; do
+    if [[ "$path" =~ $pattern ]]; then
+      VIOLATIONS+=("  $path  (matched: $pattern)")
+      break
+    fi
+  done
+done <<< "$STAGED"
+
+if [ ${#VIOLATIONS[@]} -ne 0 ]; then
+  echo
+  echo "❌ pre-commit blocked: staged paths in never-track directories"
+  echo
+  printf '%s\n' "${VIOLATIONS[@]}"
+  echo
+  echo "Likely cause: 'git add -A' / 'git add .' — use explicit file paths instead."
+  echo
+  echo "To recover:"
+  echo "  git reset HEAD <paths-you-actually-meant>"
+  echo
+  echo "To override (you almost certainly should not):  git commit --no-verify"
+  echo
+  exit 1
+fi
+
+# ─────────────────────────────────────────────────────────────────────
+# Layer 2 — .editorconfig compliance, staged files only.
+#
+# Checking the whole tree fails on every pre-existing violation and gets
+# disabled within a week. Checking only what this commit touches is the version
+# people keep.
+# ─────────────────────────────────────────────────────────────────────
+CHECKER=""
+for candidate in node_modules/.bin/editorconfig-checker ./bin/editorconfig-checker; do
+  [ -x "$candidate" ] && CHECKER="$candidate" && break
+done
+
+if [ -n "$CHECKER" ]; then
+  if ! git diff --cached --name-only --diff-filter=ACMR -z | xargs -0 -r "$CHECKER"; then
+    echo
+    echo "❌ pre-commit blocked: .editorconfig violation on a staged file"
+    echo
+    echo "A file you just changed has trailing whitespace, the wrong indent,"
+    echo "the wrong line endings, or no final newline."
+    echo
+    echo "Auto-fix:  npx editorconfig-checker --fix <path>"
+    echo "Bypass:    git commit --no-verify"
+    echo
+    exit 1
+  fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────
+# Layer 3 — project-specific checks.
+#
+# Put the check that would have caught your worst bug here, scoped to the files
+# this commit touches. Two that earned their place elsewhere:
+#   - a linter, on staged source files only
+#   - a grep for the shape of a security bug you have actually shipped, such as
+#     a tenant filter that silently drops when its variable is undefined
+# ─────────────────────────────────────────────────────────────────────
+if [ -x "scripts/pre-commit-check.sh" ]; then
+  scripts/pre-commit-check.sh $STAGED || exit 1
+fi
+
+exit 0

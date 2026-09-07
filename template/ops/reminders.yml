@@ -1,0 +1,31 @@
+# Dated operational commitments.
+#
+# Things that come due on a date rather than in response to an event. Written
+# here instead of in prose inside a document, because prose is only findable by
+# grepping for a date you already remembered — the exact failure this prevents.
+#
+# scripts/check-reminders.py reads this daily and opens a GitHub issue when one
+# falls inside its warning window, so a due date arrives where work already
+# lives instead of in a paragraph nobody re-reads.
+#
+# due:        YYYY-MM-DD for a one-off, or `every: 90d` / `every: 1y` to repeat
+# from:       for a recurring entry, the date it was last DONE
+# warn_days:  how long before the date the issue should open
+# area:       must match an Area option on your project board
+#
+# Adding one is a commit. Closing the issue it raises is how you acknowledge it.
+# For a recurring entry, bump `from:` when the work is done — that commit is the
+# record of when it last happened.
+
+reminders:
+  - id: example-credential-rotation
+    title: "Example — delete this once you have a real one"
+    due: 2099-01-01
+    warn_days: 30
+    area: Tech
+    priority: p3
+    body: |
+      What expires, where it lives, and what breaks when it does. Be specific:
+      the person reading this in eight months will not remember the context.
+
+      Include the rotation steps, or a link to them.
