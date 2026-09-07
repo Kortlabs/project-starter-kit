@@ -1,2 +1,4 @@
 .playwright-output/
 node_modules/
+__pycache__/
+*.pyc
