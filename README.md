@@ -33,7 +33,7 @@ From inside the target repository:
 
 ```bash
 git clone git@github.com:Crushoverride007/project-starter-kit.git /tmp/kit
-/tmp/kit/install.sh --name "FactureLab" --repo "Crushoverride007/facturelab"
+/tmp/kit/install.sh --name "My Project" --repo "owner/my-project"
 ```
 
 The installer copies the template in, fills the placeholders it was given, appends the never-track block

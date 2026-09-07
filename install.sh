@@ -4,7 +4,7 @@
 # Never overwrites: an existing file is reported and skipped, so running this
 # twice is safe and adopting the kit into a live project cannot clobber work.
 #
-#   /path/to/kit/install.sh --name "FactureLab" --repo "owner/facturelab"
+#   /path/to/kit/install.sh --name "My Project" --repo "owner/my-project"
 #   /path/to/kit/install.sh --print-board-help
 set -euo pipefail
 
