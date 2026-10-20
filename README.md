@@ -16,7 +16,13 @@ something went wrong, and the fix got written down. A new project inherits the f
 | `CLAUDE.md` | The rules an assistant loads every session. Placeholders marked `{{LIKE_THIS}}`. |
 | `docs/ways-of-working.md` | The process around the rules: who decides what, the loop, verification, where knowledge lives. |
 | `docs/tech-stack.md` | An inventory template, so "what do we run and why" has an answer from day one. |
-| `.githooks/pre-commit` | Three layers: never-track paths, editorconfig on staged files, an optional per-project check. |
+| `docs/tooling.md` | What the assistant works with: required tools, repo skills, plugins, the memory directory. |
+| `.githooks/pre-commit` | Five layers: never-track paths, editorconfig on staged files, the project's own check, ESLint on staged source, rule gates. |
+| `.githooks/commit-msg`, `post-commit`, `pre-push` | Commit-message rules, a comment on the issue for every bypass, no history rewrite on main. |
+| `scripts/check-rules.mjs` | The rule gates: one rule per incident, added lines only, `gate-ok:` escapes counted. |
+| `scripts/check-commit-msg.mjs`, `scripts/gate-audit-commit.sh` | The commit-message gate and the bypass audit the hooks above call. |
+| `.claude/settings.json` + `scripts/claude-hooks/` | Claude Code hooks: a command guard, an edit guard on the gate files, a Stop hook. They run in every permission mode. |
+| `scripts/daily-report.py` | One phone screen a day: work, gate bypasses with the owner's quotes, cards waiting for review. |
 | `.editorconfig` + `.editorconfig-checker.json` | Whitespace and indentation, enforced rather than requested. |
 | `ops/reminders.yml` + `scripts/check-reminders.py` | Dated commitments become GitHub issues before they come due. |
 | `scripts/verify-pages.mjs` | Playwright: visit the real pages, screenshot them, fail on console errors. |
@@ -47,6 +53,10 @@ Then, by hand:
   ones; `install.sh --print-board-help` shows how to fetch them.
 - Delete the sections that do not apply. A rules file nobody trusts is worse than a short one.
 - Adapt `scripts/deploy.sh` and `scripts/verify-pages.mjs` to how this project actually builds and runs.
+- Set the source directories in `scripts/claude-hooks/lib.sh`, `scripts/check-rules.mjs`,
+  `scripts/check-commit-msg.mjs` and `scripts/daily-report.py` (default `src`), and `ESLINT_DIR` in the
+  pre-commit hook. Keep the rules in `check-rules.mjs` that match your stack; delete the rest.
+- The hooks need `jq`, `node` and `gh` on the machine the assistant runs on.
 
 ---
 

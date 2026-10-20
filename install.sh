@@ -70,7 +70,7 @@ while IFS= read -r rel; do
   install_file "$KIT/template/$rel" "$rel"
 done < <(cd "$KIT/template" && find . -type f -printf '%P\n' | sort)
 
-chmod +x .githooks/pre-commit scripts/*.sh scripts/*.py 2>/dev/null || true
+chmod +x .githooks/* scripts/*.sh scripts/*.py scripts/*.mjs scripts/claude-hooks/*.sh 2>/dev/null || true
 
 # .gitignore is appended to, never replaced — the project's own rules matter
 # more than ours.
@@ -98,7 +98,12 @@ Next, by hand:
   3. Point scripts/deploy.sh and scripts/verify-pages.mjs at how this project
      actually builds and runs. deploy.sh refuses to run until you do.
   4. Add the real never-track paths to .githooks/pre-commit and .gitignore.
-  5. Read docs/why.md in the kit — it explains what each guardrail is for.
+  5. Set the source directories in scripts/claude-hooks/lib.sh, scripts/check-rules.mjs,
+     scripts/check-commit-msg.mjs and scripts/daily-report.py, and keep only the
+     rules in check-rules.mjs that match this stack.
+  6. Check jq, node and gh are installed: the Claude Code hooks and the gates
+     need them, and a hook that cannot run fails open.
+  7. Read docs/why.md in the kit — it explains what each guardrail is for.
 
 Verify the hook works before trusting it:
   touch .env && git add -f .env && git commit -m test   # must be refused

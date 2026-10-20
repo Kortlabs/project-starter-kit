@@ -57,6 +57,37 @@ nothing.
 
 ---
 
+## Closing work
+
+The owner's browser test is the last step before an issue closes, not a gate in front of the deploy.
+Visible work ships with `(#n)` in the commit, deploys, moves its card to `Review` with a note saying
+exactly what to test, and closes when the owner confirms. Invisible work ships with `Closes #n` and
+closes on push once the deploy is verified. The daily report lists what is waiting in Review and names
+anything left there more than three days.
+
+---
+
+## Gates, and how a bypass is seen
+
+Rules in prose get skipped. The ones a script can check run as git hooks (tracked in `.githooks/`) and as
+Claude Code hooks that fire in every permission mode. The full list is in [CLAUDE.md](../CLAUDE.md).
+
+A bypass is never silent. The owner's exact words go into the command prefix, the commit's skip line or
+the `gate-ok:` marker; the guard shows the quote in the chat; the post-commit audit comments it on the
+issue; the daily report counts it and shows the quote. Nothing can verify the words were said. The
+report is where the owner checks, and the speed with which an exception appears is the tell.
+
+---
+
+## The daily report
+
+One phone screen a day, by mail: what moved, what was bypassed, what waits for the owner. Sections that
+have nothing to say are left out, so a green day is three lines. The project this came from added
+uptime, errors, users, backups and security lines one at a time, each after the question had been asked
+twice. See `scripts/daily-report.py`.
+
+---
+
 ## What the assistant can and cannot do
 
 Knowing the boundary saves time on both sides. Adjust this list to what is actually true here.
@@ -84,6 +115,14 @@ anything outward-facing, or send mail to a real person. Approval for one does no
 
 **Verify before proposing.** A fast-moving codebase makes a six-week-old note describe something that no
 longer exists. Never propose work from memory without checking the code first.
+
+---
+
+## Tooling
+
+[tooling.md](tooling.md) lists what the assistant works with: the tools the method requires, the repo
+skills, the plugins used alongside, and the memory directory. Skills stored in this repo live under
+`.claude/skills/` and load when a task matches their description.
 
 ---
 

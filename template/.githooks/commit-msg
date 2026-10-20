@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Commit-message gate: no Co-Authored-By trailer, no emoji, an issue number,
+# no auto-close keyword on visible work, and a well-formed skip line. The logic
+# is in scripts/check-commit-msg.mjs.
+[ -f scripts/check-commit-msg.mjs ] || exit 0
+exec node scripts/check-commit-msg.mjs "$1"

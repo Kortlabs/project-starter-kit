@@ -4,8 +4,9 @@
 #
 #   git config core.hooksPath .githooks
 #
-# Bypass in a genuine emergency with `git commit --no-verify`, and expect to
-# explain why.
+# Five layers, each paid for once (docs/why.md in the kit). The bypass is the
+# no-verify flag on the commit: the Claude Code command guard refuses it, and a
+# human should expect to explain it.
 set -uo pipefail
 
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
@@ -45,7 +46,7 @@ done <<< "$STAGED"
 
 if [ ${#VIOLATIONS[@]} -ne 0 ]; then
   echo
-  echo "❌ pre-commit blocked: staged paths in never-track directories"
+  echo "pre-commit blocked: staged paths in never-track directories"
   echo
   printf '%s\n' "${VIOLATIONS[@]}"
   echo
@@ -53,8 +54,6 @@ if [ ${#VIOLATIONS[@]} -ne 0 ]; then
   echo
   echo "To recover:"
   echo "  git reset HEAD <paths-you-actually-meant>"
-  echo
-  echo "To override (you almost certainly should not):  git commit --no-verify"
   echo
   exit 1
 fi
@@ -74,29 +73,63 @@ done
 if [ -n "$CHECKER" ]; then
   if ! git diff --cached --name-only --diff-filter=ACMR -z | xargs -0 -r "$CHECKER"; then
     echo
-    echo "❌ pre-commit blocked: .editorconfig violation on a staged file"
+    echo "pre-commit blocked: .editorconfig violation on a staged file"
     echo
     echo "A file you just changed has trailing whitespace, the wrong indent,"
     echo "the wrong line endings, or no final newline."
     echo
     echo "Auto-fix:  npx editorconfig-checker --fix <path>"
-    echo "Bypass:    git commit --no-verify"
     echo
     exit 1
   fi
 fi
 
 # ─────────────────────────────────────────────────────────────────────
-# Layer 3 — project-specific checks.
+# Layer 3 — the project's own check.
 #
 # Put the check that would have caught your worst bug here, scoped to the files
-# this commit touches. Two that earned their place elsewhere:
-#   - a linter, on staged source files only
-#   - a grep for the shape of a security bug you have actually shipped, such as
-#     a tenant filter that silently drops when its variable is undefined
+# this commit touches. The project this kit came from greps new lines in route
+# files for a tenant filter that silently drops when its variable is undefined,
+# which is how two cross-tenant leaks shipped on the same day.
 # ─────────────────────────────────────────────────────────────────────
 if [ -x "scripts/pre-commit-check.sh" ]; then
+  # shellcheck disable=SC2086
   scripts/pre-commit-check.sh $STAGED || exit 1
+fi
+
+# ─────────────────────────────────────────────────────────────────────
+# Layer 4 — ESLint on staged source files only.
+#
+# A broken `npm run lint` went unnoticed for a month because nobody ran it.
+# Linting just the files this commit touches catches new violations without
+# gating on the old ones. Errors block; warnings print and pass.
+# ─────────────────────────────────────────────────────────────────────
+ESLINT_DIR="."   # the package that holds eslint and its config: `.` or `frontend`
+if [ -x "$ESLINT_DIR/node_modules/.bin/eslint" ]; then
+  prefix="${ESLINT_DIR#.}"; prefix="${prefix#/}"; [ -n "$prefix" ] && prefix="$prefix/"
+  STAGED_SRC=$(printf '%s\n' "$STAGED" | grep -E "^${prefix}src/.*\.(js|jsx|ts|tsx)$" | sed "s|^${prefix}||" || true)
+  if [ -n "$STAGED_SRC" ]; then
+    # shellcheck disable=SC2086
+    if ! (cd "$ESLINT_DIR" && node_modules/.bin/eslint $STAGED_SRC); then
+      echo
+      echo "pre-commit blocked: ESLint errors in a staged source file"
+      echo
+      echo "Only the files in this commit were linted. Auto-fixable rules:"
+      echo "  (cd $ESLINT_DIR && npx eslint --fix <path>)"
+      echo
+      exit 1
+    fi
+  fi
+fi
+
+# ─────────────────────────────────────────────────────────────────────
+# Layer 5 — rule gates. The CLAUDE.md rules a script can check, one per
+# incident, in scripts/check-rules.mjs. Added lines only, except the rules that
+# say "touching the file means fixing it". An owner-approved exception carries
+# `gate-ok: <rule-id> <reason>` on the line and is counted in the daily report.
+# ─────────────────────────────────────────────────────────────────────
+if [ -f "scripts/check-rules.mjs" ]; then
+  git diff --cached --name-only --diff-filter=ACMR -z | xargs -0 -r node scripts/check-rules.mjs || exit 1
 fi
 
 exit 0

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Gate audit: a skipped gate or a gate-ok exception in the new commit is
+# commented on the issue it references. Backgrounded so a slow GitHub call
+# never holds up a commit.
+[ -f scripts/gate-audit-commit.sh ] || exit 0
+nohup bash scripts/gate-audit-commit.sh >/dev/null 2>&1 &
