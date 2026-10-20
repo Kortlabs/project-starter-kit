@@ -28,6 +28,28 @@ fail() { printf '\n\033[31mDEPLOY FAILED: %s\033[0m\n' "$*" >&2; exit 1; }
 [[ -z "$(git status --porcelain --untracked-files=no)" ]] || fail "working tree is dirty — commit or stash first"
 COMMIT=$(git rev-parse --short HEAD)
 
+# ── 0. Review (advisory, starts now, findings printed last) ────────────────
+# Every other check in this script is mechanical; this one reads the logic. A
+# headless /code-review over everything since the last deploy tag, which is
+# exactly what is about to ship. It starts before the build so the build absorbs
+# its minutes, and the tag is pushed before the script waits for it. Advisory:
+# a review finding is a judgment, and a false positive must never hold a
+# hotfix. Whoever runs the deploy reads the findings and fixes or relays them.
+# Skipped on a throwaway deploy, on the first deploy, and without the CLI.
+PREV=$(git for-each-ref --sort=-creatordate --count=1 --format='%(refname:short)' 'refs/tags/deploy/*')
+REVIEW_PID=""
+if [[ "$TAG" == "1" && -n "$PREV" ]] && command -v claude >/dev/null && [[ -n "$(git log --oneline "$PREV..HEAD")" ]]; then
+  log "Reviewing $PREV..HEAD in the background"
+  # Unattended and read-only: print mode cannot prompt, so the tools it may use
+  # are named and the editing tools refused. The 15-minute cap and the EXIT trap
+  # keep a hung or orphaned review from outliving the deploy.
+  timeout 900 claude -p "/code-review high $PREV..HEAD" --output-format text \
+    --allowedTools 'Read,Grep,Glob,Bash(git:*)' --disallowedTools 'Edit,Write,MultiEdit,NotebookEdit' \
+    </dev/null >/tmp/deploy-review.log 2>&1 &
+  REVIEW_PID=$!
+  trap 'kill "$REVIEW_PID" 2>/dev/null || true' EXIT
+fi
+
 # ── 1. Build ────────────────────────────────────────────────────────────────
 # Nothing below this point runs if the build fails.
 log "Building ($COMMIT)"
@@ -61,6 +83,17 @@ if [[ "$TAG" == "1" ]]; then
   NAME="deploy/$(date +%Y%m%d-%H%M)"
   git tag -a "$NAME" -m "Deployed $COMMIT" && git push -q origin "$NAME"
   log "Tagged $NAME"
+fi
+
+# ── 5. Review findings ──────────────────────────────────────────────────────
+# Printed, never acted on by the script: the deploy is live and tagged already.
+if [[ -n "$REVIEW_PID" ]]; then
+  if wait "$REVIEW_PID" && [[ -s /tmp/deploy-review.log ]]; then
+    log "Code review of $PREV..HEAD: $(grep -c '"file":' /tmp/deploy-review.log || true) finding(s) (advisory)"
+    cat /tmp/deploy-review.log
+  else
+    log "Code review produced nothing usable — the deploy stands; see /tmp/deploy-review.log"
+  fi
 fi
 
 log "Deployed $COMMIT"

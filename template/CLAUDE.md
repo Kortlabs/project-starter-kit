@@ -49,6 +49,26 @@ change created.
 
 ---
 
+## Code review before shipping
+
+Two layers, neither a gate. Hooks block on deterministic rules only; a review finding is a judgment, and a
+false positive must not hold a hotfix.
+
+- **Per change, while working.** Before the commit that ships an issue, run `/code-review` on the diff. It
+  runs as a background subagent, so it overlaps the verification script. Fix the findings in the same
+  commit, which is the cheapest moment to fix anything; name the ones deliberately left in the commit
+  message. Typo and trivial-chore commits are exempt.
+- **Per deploy, the net.** `scripts/deploy.sh` reviews everything since the last deploy tag alongside the
+  build and prints the findings after the health check. It never aborts the deploy. Whoever runs the
+  deploy reads the findings and fixes or relays them.
+
+Why two: a rule can be skipped and a script cannot, and the deploy review sees a day's commits together,
+which catches two changes that each look fine alone. Hosted pull-request reviewers only fire on pull
+requests; a project that ships straight to its main branch needs the review in the session and in the
+deploy script instead.
+
+---
+
 ## Git staging — explicit paths only
 
 - **Never `git add -A`, `git add .`, or `git add --all`.** Stage named paths.

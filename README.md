@@ -20,7 +20,7 @@ something went wrong, and the fix got written down. A new project inherits the f
 | `.editorconfig` + `.editorconfig-checker.json` | Whitespace and indentation, enforced rather than requested. |
 | `ops/reminders.yml` + `scripts/check-reminders.py` | Dated commitments become GitHub issues before they come due. |
 | `scripts/verify-pages.mjs` | Playwright: visit the real pages, screenshot them, fail on console errors. |
-| `scripts/deploy.sh` | A deploy that builds first, aborts before touching the running service, and health-checks after. |
+| `scripts/deploy.sh` | A deploy that builds first, aborts before touching the running service, health-checks after, and reviews the diff since the last deploy tag alongside the build. |
 
 Also read [docs/why.md](docs/why.md) — one paragraph per guardrail explaining the incident behind it. It
 is short, and it is the difference between following a rule and understanding it.

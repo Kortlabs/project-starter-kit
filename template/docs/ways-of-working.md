@@ -32,9 +32,12 @@ whether a page feels right, and does not know what was promised to a customer.
 4. **State the plan and the assumptions** for anything non-trivial.
 5. **Build**, matching the patterns already there.
 6. **Verify.** This is the step that separates working software from software that returns 200.
-7. **Deploy** with the documented commands, never by improvising.
-8. **Report what to test.** The owner does the real functional and aesthetic testing.
-9. **Document it** when a shipped feature warrants it.
+7. **Review the diff** before the commit that ships an issue: `/code-review` on the change, findings fixed
+   in the same commit. The deploy script reviews everything since the last deploy tag as a net. Neither
+   one blocks.
+8. **Deploy** with the documented commands, never by improvising.
+9. **Report what to test.** The owner does the real functional and aesthetic testing.
+10. **Document it** when a shipped feature warrants it.
 
 ---
 
@@ -43,6 +46,7 @@ whether a page feels right, and does not know what was promised to a customer.
 | Method | What it proves |
 |---|---|
 | `node scripts/verify-pages.mjs` | The real pages render, with no console errors or failed requests. Screenshots can be read directly. |
+| `/code-review` on a diff | A second read of the change for correctness bugs: a control wired to the wrong field, a caller a signature change missed, an edge case the happy path skips. Per issue before the shipping commit, and again in `scripts/deploy.sh` over everything since the last deploy tag. Advisory, never a gate. |
 | A one-off browser script | Anything specific: measuring an element, exercising a form, diffing two states. Write it, run it, delete it. |
 | Health checks after deploy | The service actually came back. |
 | A real end-to-end request | For anything involving another system. Do not trust a 200. |

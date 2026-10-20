@@ -41,6 +41,14 @@ non-critical step warn rather than suppress the signal that the critical step wo
 only on one disk is not backed up. But making the vault a boot dependency turns a vault outage into an
 application outage, which trades a rare problem for a common one.
 
+**A code review before shipping, advisory.** Every gate a one-person, AI-built project has is mechanical:
+lint, whitespace, blocked paths, a browser check that the page mounts. None of them reads the logic, and
+the bug that keeps recurring is the one a read catches: a control wired to the wrong column that silently
+does nothing, a change that passed its unit test and still shipped broken. So the diff gets a second read,
+per issue before the shipping commit and per deploy over everything since the last tag. Advisory on
+purpose: a review finding is a judgment, and blocking a hotfix on a false positive costs more than the bug
+it might catch. Hosted pull-request reviewers never fire on a project that ships straight to main.
+
 **Flag, don't act.** An assistant that silently fixes unrelated things it notices produces commits nobody
 asked for and cannot review. Noticing is valuable; acting on it unasked is scope creep.
 
