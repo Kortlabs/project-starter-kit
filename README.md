@@ -14,7 +14,7 @@ something went wrong, and the fix got written down. A new project inherits the f
 | File | What it does |
 |---|---|
 | `CLAUDE.md` | The rules an assistant loads every session. Placeholders marked `{{LIKE_THIS}}`. |
-| `docs/ways-of-working.md` | The process around the rules: who decides what, the loop, verification, where knowledge lives. |
+| `docs/ways-of-working.md` | The process around the rules: who decides what, the loop, verification, closing work, gates and how a bypass is seen, the daily report, where knowledge lives. |
 | `docs/tech-stack.md` | An inventory template, so "what do we run and why" has an answer from day one. |
 | `docs/tooling.md` | What the assistant works with: required tools, repo skills, plugins, the memory directory. |
 | `.githooks/pre-commit` | Five layers: never-track paths, editorconfig on staged files, the project's own check, ESLint on staged source, rule gates. |
